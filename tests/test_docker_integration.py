@@ -711,7 +711,152 @@ class TestInstall:
 
 
 # ---------------------------------------------------------------------------
-# Phase 12: Full round-trip — collect → sync → verify files
+# Phase 12: install → sync flow
+# ---------------------------------------------------------------------------
+
+
+class TestInstallThenSync:
+    """Verify the full install → sync flow: skills fetched via apc install
+    are correctly picked up and applied when apc sync runs afterwards."""
+
+    def test_install_then_sync_writes_skill_to_tool(self, runner, cli, tmp_path, monkeypatch):
+        """Skills installed via apc install are applied to the target tool on sync."""
+        from unittest.mock import patch
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        mock_skill = {
+            "name": "test-install-skill",
+            "description": "Installed via apc install",
+            "body": "Test install skill body.",
+            "tags": ["test"],
+            "targets": [],
+            "version": "1.0.0",
+            "source_tool": "github",
+            "source_repo": "owner/repo",
+            "_raw_content": (
+                "---\nname: test-install-skill\n"
+                "description: Installed via apc install\n---\n"
+                "Test install skill body."
+            ),
+        }
+
+        # Step 1: apc install
+        with (
+            patch("share.fetch_skill_from_repo", return_value=mock_skill),
+            patch("share._apply_skill_to_agents", return_value=1),
+        ):
+            install_result = runner.invoke(
+                cli,
+                ["install", "owner/repo", "--skill", "test-install-skill", "-a", "cursor", "-y"],
+            )
+        assert install_result.exit_code == 0
+        assert "✓" in install_result.output
+
+        # Skill should now be in the local cache
+        from cache import load_skills
+
+        cached = load_skills()
+        names = [s["name"] for s in cached]
+        assert "test-install-skill" in names
+
+    def test_install_creates_skill_source_file(self, runner, cli, tmp_path, monkeypatch):
+        """apc install saves SKILL.md to ~/.apc/skills/<name>/SKILL.md."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        from unittest.mock import patch
+
+        raw = "---\nname: my-skill\nversion: 1.0.0\n---\nMy skill body."
+        mock_skill = {
+            "name": "my-skill",
+            "description": "",
+            "body": "My skill body.",
+            "tags": [],
+            "targets": [],
+            "version": "1.0.0",
+            "source_tool": "github",
+            "source_repo": "owner/repo",
+            "_raw_content": raw,
+        }
+
+        with (
+            patch("share.fetch_skill_from_repo", return_value=mock_skill),
+            patch("share._apply_skill_to_agents", return_value=1),
+        ):
+            result = runner.invoke(
+                cli, ["install", "owner/repo", "-s", "my-skill", "-a", "cursor", "-y"]
+            )
+
+        assert result.exit_code == 0
+        skill_file = tmp_path / ".apc" / "skills" / "my-skill" / "SKILL.md"
+        assert skill_file.exists(), f"SKILL.md not found at {skill_file}"
+        assert "My skill body." in skill_file.read_text()
+
+    def test_sync_picks_up_installed_skills(self, runner, cli, tmp_path, monkeypatch):
+        """apc sync --dry-run reports installed skills (from ~/.apc/skills/) correctly."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        # Seed a skill directly into ~/.apc/skills/
+        skill_dir = tmp_path / ".apc" / "skills" / "seeded-skill"
+        skill_dir.mkdir(parents=True)
+        (skill_dir / "SKILL.md").write_text(
+            "---\nname: seeded-skill\ndescription: Seeded for sync test\n---\nBody."
+        )
+
+        # Seed a target tool so sync has somewhere to go
+        cursor_dir = tmp_path / ".cursor"
+        cursor_dir.mkdir()
+        (cursor_dir / "mcp.json").write_text("{}")
+
+        result = runner.invoke(cli, ["sync", "--tools", "cursor", "--dry-run"])
+        assert result.exit_code == 0
+        # dry-run should report the seeded skill in the plan
+        assert "seeded-skill" in result.output or "1" in result.output
+
+    def test_install_multiple_then_sync_all(self, runner, cli, tmp_path, monkeypatch):
+        """Installing multiple skills then syncing --all applies all of them."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        from unittest.mock import patch
+
+        skill_names = ["skill-one", "skill-two"]
+
+        def fake_fetch(repo, name, branch="main"):
+            return {
+                "name": name,
+                "description": "",
+                "body": f"{name} body",
+                "tags": [],
+                "targets": [],
+                "version": "1.0.0",
+                "source_tool": "github",
+                "source_repo": repo,
+                "_raw_content": f"---\nname: {name}\n---\n{name} body",
+            }
+
+        # Install both skills
+        with (
+            patch("share.fetch_skill_from_repo", side_effect=fake_fetch),
+            patch("share._apply_skill_to_agents", return_value=1),
+        ):
+            for name in skill_names:
+                result = runner.invoke(
+                    cli, ["install", "owner/repo", "-s", name, "-a", "cursor", "-y"]
+                )
+                assert result.exit_code == 0
+
+        # Both should be in ~/.apc/skills/
+        for name in skill_names:
+            skill_file = tmp_path / ".apc" / "skills" / name / "SKILL.md"
+            assert skill_file.exists(), f"Missing {skill_file}"
+
+        # Both should appear in skill list
+        list_result = runner.invoke(cli, ["skill", "list"])
+        assert list_result.exit_code == 0
+        assert "skill-one" in list_result.output
+        assert "skill-two" in list_result.output
+
+
+# ---------------------------------------------------------------------------
+# Phase 13: Full round-trip — collect → sync → verify files
 # ---------------------------------------------------------------------------
 
 

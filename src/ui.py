@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 
 import click
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -301,7 +302,7 @@ def _skill_panel_content(skill: Dict) -> str:
     if body:
         if parts:
             parts.append("")
-        parts.append(body)
+        parts.append(escape(body))
 
     return "\n".join(parts) if parts else "[dim]No content[/dim]"
 

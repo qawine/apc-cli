@@ -59,7 +59,11 @@ class OpenClawApplier(BaseApplier):
         return count
 
     def apply_mcp_servers(
-        self, servers: List[Dict], secrets: Dict[str, str], manifest: ToolManifest
+        self,
+        servers: List[Dict],
+        secrets: Dict[str, str],
+        manifest: ToolManifest,
+        override: bool = False,
     ) -> int:
         # OpenClaw does not support MCP servers — it uses its own skill/tool system
         return 0
