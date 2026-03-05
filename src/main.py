@@ -121,7 +121,9 @@ def sync(tools, apply_all, no_memory, override_mcp, dry_run, yes):
             info("Cancelled.")
             return
 
-    sync_all(tool_list, no_memory=no_memory, override_mcp=override_mcp)
+    ok = sync_all(tool_list, no_memory=no_memory, override_mcp=override_mcp)
+    if not ok:
+        raise SystemExit(1)
 
 
 def main():
