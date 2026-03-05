@@ -1,4 +1,7 @@
-"""apc install command — install skills from a GitHub repository."""
+"""apc install command — install skills from a GitHub repository.
+
+Handles the `apc install owner/repo` command and all its options.
+"""
 
 from typing import List
 

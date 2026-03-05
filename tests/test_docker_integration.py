@@ -590,7 +590,7 @@ class TestInstall:
 
         mock_skills = ["frontend-design", "skill-creator", "pdf"]
 
-        with patch("share.list_skills_in_repo", return_value=mock_skills):
+        with patch("install.list_skills_in_repo", return_value=mock_skills):
             result = runner.invoke(cli, ["install", "owner/repo", "--list"])
 
         assert result.exit_code == 0
@@ -603,7 +603,7 @@ class TestInstall:
         """--list on a repo with no skills prints an error."""
         from unittest.mock import patch
 
-        with patch("share.list_skills_in_repo", return_value=[]):
+        with patch("install.list_skills_in_repo", return_value=[]):
             result = runner.invoke(cli, ["install", "owner/repo", "--list"])
 
         assert "no skills found" in result.output.lower()
@@ -625,8 +625,8 @@ class TestInstall:
         }
 
         with (
-            patch("share.fetch_skill_from_repo", return_value=mock_skill),
-            patch("share._apply_skill_to_agents", return_value=1),
+            patch("install.fetch_skill_from_repo", return_value=mock_skill),
+            patch("install._apply_skill_to_agents", return_value=1),
         ):
             result = runner.invoke(
                 cli,
@@ -641,7 +641,7 @@ class TestInstall:
         """A skill that doesn't exist in the repo prints a clear not-found message."""
         from unittest.mock import patch
 
-        with patch("share.fetch_skill_from_repo", return_value=None):
+        with patch("install.fetch_skill_from_repo", return_value=None):
             result = runner.invoke(
                 cli,
                 ["install", "owner/repo", "--skill", "nonexistent-skill", "-a", "cursor", "-y"],
@@ -672,9 +672,9 @@ class TestInstall:
             }
 
         with (
-            patch("share.list_skills_in_repo", return_value=skill_names),
-            patch("share.fetch_skill_from_repo", side_effect=fake_fetch),
-            patch("share._apply_skill_to_agents", return_value=1),
+            patch("install.list_skills_in_repo", return_value=skill_names),
+            patch("install.fetch_skill_from_repo", side_effect=fake_fetch),
+            patch("install._apply_skill_to_agents", return_value=1),
         ):
             result = runner.invoke(cli, ["install", "owner/repo", "--all", "-a", "cursor", "-y"])
 
@@ -698,8 +698,8 @@ class TestInstall:
         }
 
         with (
-            patch("share.fetch_skill_from_repo", return_value=mock_skill),
-            patch("share._apply_skill_to_agents", return_value=1),
+            patch("install.fetch_skill_from_repo", return_value=mock_skill),
+            patch("install._apply_skill_to_agents", return_value=1),
         ):
             result = runner.invoke(
                 cli, ["install", "owner/repo", "-s", "test-skill", "-a", "cursor", "-y"]
@@ -743,8 +743,8 @@ class TestInstallThenSync:
 
         # Step 1: apc install
         with (
-            patch("share.fetch_skill_from_repo", return_value=mock_skill),
-            patch("share._apply_skill_to_agents", return_value=1),
+            patch("install.fetch_skill_from_repo", return_value=mock_skill),
+            patch("install._apply_skill_to_agents", return_value=1),
         ):
             install_result = runner.invoke(
                 cli,
@@ -779,8 +779,8 @@ class TestInstallThenSync:
         }
 
         with (
-            patch("share.fetch_skill_from_repo", return_value=mock_skill),
-            patch("share._apply_skill_to_agents", return_value=1),
+            patch("install.fetch_skill_from_repo", return_value=mock_skill),
+            patch("install._apply_skill_to_agents", return_value=1),
         ):
             result = runner.invoke(
                 cli, ["install", "owner/repo", "-s", "my-skill", "-a", "cursor", "-y"]
@@ -834,8 +834,8 @@ class TestInstallThenSync:
 
         # Install both skills
         with (
-            patch("share.fetch_skill_from_repo", side_effect=fake_fetch),
-            patch("share._apply_skill_to_agents", return_value=1),
+            patch("install.fetch_skill_from_repo", side_effect=fake_fetch),
+            patch("install._apply_skill_to_agents", return_value=1),
         ):
             for name in skill_names:
                 result = runner.invoke(
