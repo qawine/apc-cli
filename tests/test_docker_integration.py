@@ -187,14 +187,17 @@ class TestStatus:
     def test_detects_claude(self, runner, cli):
         result = runner.invoke(cli, ["status"])
         assert "claude" in result.output.lower()
+        assert (HOME / ".claude").is_dir()
 
     def test_detects_cursor(self, runner, cli):
         result = runner.invoke(cli, ["status"])
         assert "cursor" in result.output.lower()
+        assert (HOME / ".cursor").is_dir()
 
     def test_detects_gemini(self, runner, cli):
         result = runner.invoke(cli, ["status"])
         assert "gemini" in result.output.lower()
+        assert (HOME / ".gemini").is_dir()
 
     def test_detects_copilot(self, runner, cli):
         result = runner.invoke(cli, ["status"])
@@ -203,10 +206,12 @@ class TestStatus:
     def test_detects_windsurf(self, runner, cli):
         result = runner.invoke(cli, ["status"])
         assert "windsurf" in result.output.lower()
+        assert (HOME / ".codeium" / "windsurf").is_dir()
 
     def test_detects_openclaw(self, runner, cli):
         result = runner.invoke(cli, ["status"])
         assert "openclaw" in result.output.lower()
+        assert (HOME / ".openclaw").is_dir()
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +223,11 @@ class TestCollect:
     def test_collect_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["collect", "--yes"])
         assert result.exit_code == 0, result.output
+        cache_dir = HOME / ".apc" / "cache"
+        assert cache_dir.is_dir()
+        assert (cache_dir / "skills.json").exists()
+        assert (cache_dir / "mcp_servers.json").exists()
+        assert (cache_dir / "memory.json").exists()
 
     def test_cache_skills_json_created(self, runner, cli):
         runner.invoke(cli, ["collect", "--yes"])
@@ -299,23 +309,34 @@ class TestSkill:
     def test_skill_list_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["skill", "list"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "skills.json").exists()
 
     def test_skill_list_shows_test_skill(self, runner, cli):
         result = runner.invoke(cli, ["skill", "list"])
         assert "test-skill" in result.output
+        data = json.loads((HOME / ".apc" / "cache" / "skills.json").read_text())
+        names = [s["name"] for s in data]
+        assert "test-skill" in names
 
     def test_skill_list_shows_oc_skill(self, runner, cli):
         result = runner.invoke(cli, ["skill", "list"])
         assert "oc-skill" in result.output
+        data = json.loads((HOME / ".apc" / "cache" / "skills.json").read_text())
+        names = [s["name"] for s in data]
+        assert "oc-skill" in names
 
     def test_skill_show_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["skill", "show"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "skills.json").exists()
 
     def test_skill_show_by_name(self, runner, cli):
         result = runner.invoke(cli, ["skill", "show", "test-skill"])
         assert result.exit_code == 0
         assert "test skill" in result.output.lower() or "test-skill" in result.output.lower()
+        # Skill must be in cache to be displayed
+        data = json.loads((HOME / ".apc" / "cache" / "skills.json").read_text())
+        assert any(s["name"] == "test-skill" for s in data)
 
 
 # ---------------------------------------------------------------------------
@@ -331,17 +352,22 @@ class TestMemory:
     def test_memory_list_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["memory", "list"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "memory.json").exists()
 
     def test_memory_add_exits_zero(self, runner, cli):
         result = runner.invoke(
             cli, ["memory", "add", "Docker test pref", "--category", "preference"]
         )
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "memory.json").exists()
 
     def test_memory_add_persists(self, runner, cli):
         runner.invoke(cli, ["memory", "add", "Docker test pref", "--category", "preference"])
         result = runner.invoke(cli, ["memory", "list"])
         assert "Docker test pref" in result.output
+        data = json.loads((HOME / ".apc" / "cache" / "memory.json").read_text())
+        contents = " ".join(e.get("content", "") + e.get("body", "") for e in data)
+        assert "Docker test pref" in contents
 
     def test_memory_add_writes_to_cache(self, runner, cli):
         runner.invoke(cli, ["memory", "add", "Unique docker mem", "--category", "workflow"])
@@ -352,11 +378,13 @@ class TestMemory:
     def test_memory_show_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["memory", "show"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "memory.json").exists()
 
     def test_memory_list_shows_collected_files(self, runner, cli):
         result = runner.invoke(cli, ["memory", "list"])
-        # Should show raw-file entries from claude and openclaw
         assert "claude" in result.output.lower() or "openclaw" in result.output.lower()
+        data = json.loads((HOME / ".apc" / "cache" / "memory.json").read_text())
+        assert len(data) > 0, "memory.json is empty after collect"
 
 
 # ---------------------------------------------------------------------------
@@ -372,14 +400,21 @@ class TestMcp:
     def test_mcp_list_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["mcp", "list"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "mcp_servers.json").exists()
 
     def test_mcp_list_shows_servers(self, runner, cli):
         result = runner.invoke(cli, ["mcp", "list"])
         assert "test-claude-mcp" in result.output
+        data = json.loads((HOME / ".apc" / "cache" / "mcp_servers.json").read_text())
+        names = [s["name"] for s in data]
+        assert "test-claude-mcp" in names
 
     def test_mcp_remove_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["mcp", "remove", "test-claude-mcp", "-y"])
         assert result.exit_code == 0, result.output
+        data = json.loads((HOME / ".apc" / "cache" / "mcp_servers.json").read_text())
+        names = [s["name"] for s in data]
+        assert "test-claude-mcp" not in names
 
     def test_mcp_remove_deletes_from_cache(self, runner, cli):
         runner.invoke(cli, ["mcp", "remove", "test-claude-mcp", "-y"])
@@ -396,8 +431,11 @@ class TestMcp:
         runner.invoke(cli, ["mcp", "remove", "test-claude-mcp", "-y"])
         result = runner.invoke(cli, ["mcp", "list"])
         assert "test-claude-mcp" not in result.output
-        # Other servers should still be there
         assert "test-cursor-mcp" in result.output
+        data = json.loads((HOME / ".apc" / "cache" / "mcp_servers.json").read_text())
+        names = [s["name"] for s in data]
+        assert "test-claude-mcp" not in names
+        assert "test-cursor-mcp" in names
 
 
 # ---------------------------------------------------------------------------
@@ -413,6 +451,9 @@ class TestSync:
     def test_sync_to_claude_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["sync", "--tools", "claude-code", "--yes", "--no-memory"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".claude.json").exists()
+        data = json.loads((HOME / ".claude.json").read_text())
+        assert "mcpServers" in data
 
     def test_sync_writes_claude_json_mcp(self, runner, cli):
         runner.invoke(cli, ["sync", "--tools", "claude-code", "--yes", "--no-memory"])
@@ -432,6 +473,13 @@ class TestSync:
             cli, ["sync", "--tools", "cursor", "--yes", "--no-memory", "--override-mcp"]
         )
         assert result.exit_code == 0, result.output
+        assert (HOME / ".cursor" / "mcp.json").exists()
+        data = json.loads((HOME / ".cursor" / "mcp.json").read_text())
+        assert "mcpServers" in data
+        assert len(data["mcpServers"]) > 0
+        rules_dir = HOME / ".cursor" / "rules"
+        assert rules_dir.is_dir()
+        assert len(list(rules_dir.glob("*.mdc"))) > 0, "No .mdc skill files written to cursor"
 
     def test_sync_writes_cursor_mcp(self, runner, cli):
         runner.invoke(cli, ["sync", "--tools", "cursor", "--yes", "--no-memory", "--override-mcp"])
@@ -440,9 +488,11 @@ class TestSync:
         assert len(data["mcpServers"]) > 0
 
     def test_sync_dry_run(self, runner, cli):
+        claude_before = (HOME / ".claude.json").read_text()
         result = runner.invoke(cli, ["sync", "--dry-run", "--all", "--yes"])
         assert result.exit_code == 0
         assert "no files written" in result.output.lower()
+        assert (HOME / ".claude.json").read_text() == claude_before, "dry-run modified .claude.json"
 
     def test_sync_dry_run_does_not_modify_files(self, runner, cli):
         # Record state before
@@ -465,6 +515,9 @@ class TestSubSync:
     def test_mcp_sync_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["mcp", "sync", "--tools", "claude-code", "--yes"])
         assert result.exit_code == 0, result.output
+        data = json.loads((HOME / ".claude.json").read_text())
+        assert "mcpServers" in data
+        assert len(data["mcpServers"]) > 0
 
     def test_mcp_sync_writes_servers(self, runner, cli):
         runner.invoke(cli, ["mcp", "sync", "--tools", "claude-code", "--yes"])
@@ -475,6 +528,9 @@ class TestSubSync:
     def test_skill_sync_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["skill", "sync", "--tools", "claude-code", "--yes"])
         assert result.exit_code == 0, result.output
+        commands_dir = HOME / ".claude" / "commands"
+        assert commands_dir.is_dir()
+        assert len(list(commands_dir.glob("*.md"))) > 0, "No skill files written to claude commands"
 
     def test_skill_sync_writes_skill_files(self, runner, cli):
         runner.invoke(cli, ["skill", "sync", "--tools", "claude-code", "--yes"])
@@ -492,10 +548,12 @@ class TestModels:
     def test_models_status_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["model", "status"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc").is_dir()
 
     def test_models_list_exits_zero(self, runner, cli):
         result = runner.invoke(cli, ["model", "list"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc").is_dir()
 
     def test_models_set(self, runner, cli):
         result = runner.invoke(cli, ["model", "set", "anthropic/claude-sonnet-4-6"])
@@ -530,6 +588,10 @@ class TestConfigure:
             ],
         )
         assert result.exit_code == 0, result.output
+        auth_path = HOME / ".apc" / "auth-profiles.json"
+        assert auth_path.exists(), "auth-profiles.json not written by configure"
+        data = json.loads(auth_path.read_text())
+        assert any("anthropic" in k for k in data.get("profiles", {}))
 
     def test_configure_writes_auth_profile(self, runner, cli):
         runner.invoke(
@@ -567,22 +629,250 @@ class TestConfigure:
 
 
 # ---------------------------------------------------------------------------
-# Phase 11: apc install (network-dependent, graceful failure)
+# Phase 11: apc install (GitHub repo-first UX)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Phase 11: apc install (real GitHub network calls, no mocks)
 # ---------------------------------------------------------------------------
 
 
 class TestInstall:
-    def test_install_nonexistent_fails_gracefully(self, runner, cli):
-        result = runner.invoke(cli, ["install", "test-nonexistent-skill-xyz"])
-        # Should not crash — either exit 0 with "not found" message
-        # or exit 1 but with a clean error message
-        combined = result.output
-        assert "not found" in combined.lower() or result.exit_code == 0
+    """Real-command tests for apc install.
+
+    Uses anthropics/skills as the test repo — a stable public repo with known skills.
+    All commands invoke the real GitHub API and write real files.
+    """
+
+    TEST_REPO = "anthropics/skills"
+    KNOWN_SKILL = "pdf"  # small, stable skill
+
+    def test_install_invalid_repo_url(self, runner, cli):
+        """Full GitHub URLs are rejected — must be owner/repo slug."""
+        result = runner.invoke(cli, ["install", "https://github.com/anthropics/skills"])
+        assert result.exit_code != 0
+        assert "owner/repo format" in result.output.lower()
+
+    def test_install_invalid_no_slash(self, runner, cli):
+        """A bare name with no slash is rejected immediately."""
+        result = runner.invoke(cli, ["install", "notaslug"])
+        assert result.exit_code != 0
+
+    def test_install_list_real_repo(self, runner, cli):
+        """--list fetches and prints the real skill index from GitHub."""
+        result = runner.invoke(cli, ["install", self.TEST_REPO, "--list"])
+        assert result.exit_code == 0
+        assert "•" in result.output
+        assert "skill(s) found" in result.output
+        assert self.KNOWN_SKILL in result.output
+        # --list is read-only: nothing written to ~/.apc/skills/
+        skills_dir = Path.home() / ".apc" / "skills"
+        if skills_dir.exists():
+            assert self.KNOWN_SKILL not in [d.name for d in skills_dir.iterdir()]
+
+    def test_install_single_skill(self, runner, cli, tmp_path, monkeypatch):
+        """Install one real skill — verifies cache entry and SKILL.md on disk."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        result = runner.invoke(
+            cli,
+            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"],
+        )
+        assert result.exit_code == 0, result.output
+        assert "✓" in result.output
+        skill_file = tmp_path / ".apc" / "skills" / self.KNOWN_SKILL / "SKILL.md"
+        assert skill_file.exists(), "SKILL.md not written to ~/.apc/skills/"
+        assert len(skill_file.read_text()) > 0
+
+    def test_install_multiple_skills(self, runner, cli, tmp_path, monkeypatch):
+        """Install two real skills in one command."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        result = runner.invoke(
+            cli,
+            [
+                "install",
+                self.TEST_REPO,
+                "--skill",
+                "pdf",
+                "--skill",
+                "skill-creator",
+                "-t",
+                "cursor",
+                "-y",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "Installed 2 skill(s)" in result.output
+        assert (tmp_path / ".apc" / "skills" / "pdf" / "SKILL.md").exists()
+        assert (tmp_path / ".apc" / "skills" / "skill-creator" / "SKILL.md").exists()
+
+    def test_install_nonexistent_skill(self, runner, cli, tmp_path, monkeypatch):
+        """A skill name that does not exist in the repo prints a clear message."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        result = runner.invoke(
+            cli,
+            [
+                "install",
+                self.TEST_REPO,
+                "--skill",
+                "totally-nonexistent-xyz",
+                "-t",
+                "cursor",
+                "-y",
+            ],
+        )
+        assert result.exit_code == 0  # not a crash — graceful message
+        assert (
+            "not found" in result.output.lower()
+            or "no skills were installed" in result.output.lower()
+        )
+
+    def test_install_all(self, runner, cli, tmp_path, monkeypatch):
+        """--all installs every skill from the repo."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        result = runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-t", "cursor", "-y"])
+        assert result.exit_code == 0, result.output
+        assert "✓" in result.output
+        skills_dir = tmp_path / ".apc" / "skills"
+        installed = list(skills_dir.iterdir())
+        assert len(installed) > 5, f"Expected >5 skills installed, got {len(installed)}"
+
+    def test_install_yes_skips_confirmation(self, runner, cli, tmp_path, monkeypatch):
+        """-y completes without showing a Proceed? prompt."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        result = runner.invoke(
+            cli,
+            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"],
+        )
+        assert result.exit_code == 0
+        assert "Proceed?" not in result.output
+        skill_md = tmp_path / ".apc" / "skills" / self.KNOWN_SKILL / "SKILL.md"
+        assert skill_md.exists(), "SKILL.md not written even with -y"
+        assert len(skill_md.read_text()) > 0
+
+    def test_install_target_all_agents(self, runner, cli, tmp_path, monkeypatch):
+        """--target '*' installs to all detected tools."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        (tmp_path / ".cursor").mkdir()
+        result = runner.invoke(
+            cli,
+            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "--target", "*", "-y"],
+        )
+        assert result.exit_code == 0, result.output
+        assert "✓" in result.output
+        skill_md = tmp_path / ".apc" / "skills" / self.KNOWN_SKILL / "SKILL.md"
+        assert skill_md.exists(), "SKILL.md not written when targeting all agents"
 
 
 # ---------------------------------------------------------------------------
-# Phase 12: Full round-trip — collect → sync → verify files
+# Phase 12: install → sync end-to-end flow (no mocks)
 # ---------------------------------------------------------------------------
+
+
+class TestInstallThenSync:
+    """Real end-to-end install → sync flow.
+
+    Installs real skills from GitHub, runs apc sync, and verifies the
+    resulting file-system state in the target tool's directory.
+    """
+
+    TEST_REPO = "anthropics/skills"
+    KNOWN_SKILL = "pdf"
+
+    def test_install_then_sync_symlinks_skill_to_tool(self, runner, cli, tmp_path, monkeypatch):
+        """Skill installed via apc install is symlinked into tool dir after apc sync."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        (tmp_path / ".cursor").mkdir()
+        (tmp_path / ".cursor" / "mcp.json").write_text("{}")
+
+        r1 = runner.invoke(
+            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"]
+        )
+        assert r1.exit_code == 0, r1.output
+
+        r2 = runner.invoke(cli, ["sync", "--tools", "cursor", "--yes"])
+        assert r2.exit_code == 0, r2.output
+
+        cursor_skill = tmp_path / ".cursor" / "rules" / f"{self.KNOWN_SKILL}.mdc"
+        assert cursor_skill.exists(), f"Skill not found at {cursor_skill} after sync"
+
+    def test_installed_skill_appears_in_skill_list(self, runner, cli, tmp_path, monkeypatch):
+        """Installed skill appears in apc skill list immediately after install."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        runner.invoke(
+            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"]
+        )
+
+        result = runner.invoke(cli, ["skill", "list"])
+        assert result.exit_code == 0
+        assert self.KNOWN_SKILL in result.output
+        skill_md = tmp_path / ".apc" / "skills" / self.KNOWN_SKILL / "SKILL.md"
+        assert skill_md.exists(), "SKILL.md missing after install"
+        assert len(skill_md.read_text()) > 0
+
+    def test_install_multiple_then_sync_all_land_in_tool(self, runner, cli, tmp_path, monkeypatch):
+        """All installed skills land in the tool directory after sync."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        (tmp_path / ".cursor").mkdir()
+        (tmp_path / ".cursor" / "mcp.json").write_text("{}")
+
+        skills = ["pdf", "skill-creator"]
+        r_install = runner.invoke(
+            cli,
+            [
+                "install",
+                self.TEST_REPO,
+                "--skill",
+                skills[0],
+                "--skill",
+                skills[1],
+                "-t",
+                "cursor",
+                "-y",
+            ],
+        )
+        assert r_install.exit_code == 0, r_install.output
+        assert "Installed 2 skill(s)" in r_install.output
+
+        r_sync = runner.invoke(cli, ["sync", "--tools", "cursor", "--yes"])
+        assert r_sync.exit_code == 0, r_sync.output
+
+        rules_dir = tmp_path / ".cursor" / "rules"
+        for name in skills:
+            assert (rules_dir / f"{name}.mdc").exists(), (
+                f"Skill {name} missing from cursor after sync"
+            )
+
+    def test_install_all_then_sync_dry_run(self, runner, cli, tmp_path, monkeypatch):
+        """Install all skills then dry-run sync — no files written but plan is shown."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        (tmp_path / ".cursor").mkdir()
+        (tmp_path / ".cursor" / "mcp.json").write_text("{}")
+
+        runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-t", "cursor", "-y"])
+
+        installed_count = len(list((tmp_path / ".apc" / "skills").iterdir()))
+        assert installed_count > 5
+
+        r_sync = runner.invoke(cli, ["sync", "--tools", "cursor", "--dry-run"])
+        assert r_sync.exit_code == 0
+        assert "No files written" in r_sync.output or "dry-run" in r_sync.output.lower()
+
+    def test_status_synced_after_install_and_sync(self, runner, cli, tmp_path, monkeypatch):
+        """apc status shows cursor as synced after a full install + sync cycle."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        (tmp_path / ".cursor").mkdir()
+        (tmp_path / ".cursor" / "mcp.json").write_text("{}")
+
+        runner.invoke(
+            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"]
+        )
+        runner.invoke(cli, ["sync", "--tools", "cursor", "--yes"])
+
+        r_status = runner.invoke(cli, ["status"])
+        assert r_status.exit_code == 0
+        assert "synced" in r_status.output.lower()
 
 
 class TestRoundTrip:
@@ -666,6 +956,10 @@ class TestExport:
     def test_export_exits_zero(self, runner, cli, export_path):
         result = runner.invoke(cli, ["export", str(export_path), "--yes"])
         assert result.exit_code == 0, result.output
+        assert (export_path / "apc-export.json").exists(), "apc-export.json not created"
+        assert (export_path / "cache").is_dir(), "cache/ dir not created"
+        assert (export_path / "cache" / "skills.json").exists()
+        assert (export_path / "cache" / "mcp_servers.json").exists()
 
     def test_export_creates_metadata(self, runner, cli, export_path):
         runner.invoke(cli, ["export", str(export_path), "--yes"])
@@ -779,6 +1073,8 @@ class TestImport:
         self._do_export(runner, cli, export_path)
         result = runner.invoke(cli, ["import", str(export_path), "--yes"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "skills.json").exists()
+        assert (HOME / ".apc" / "cache" / "mcp_servers.json").exists()
 
     def test_import_invalid_path(self, runner, cli, tmp_path):
         result = runner.invoke(cli, ["import", str(tmp_path / "nonexistent"), "--yes"])
@@ -788,11 +1084,14 @@ class TestImport:
         self._do_export(runner, cli, export_path)
         result = runner.invoke(cli, ["import", str(export_path), "--yes"])
         assert "apc sync" in result.output
+        assert (HOME / ".apc" / "cache" / "skills.json").exists()
 
     def test_import_no_secrets_flag(self, runner, cli, export_path):
         self._do_export(runner, cli, export_path)
         result = runner.invoke(cli, ["import", str(export_path), "--no-secrets", "--yes"])
         assert result.exit_code == 0, result.output
+        assert (HOME / ".apc" / "cache" / "skills.json").exists()
+        assert (HOME / ".apc" / "cache" / "mcp_servers.json").exists()
 
 
 class TestExportImportRoundTrip:

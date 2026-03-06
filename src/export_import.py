@@ -28,8 +28,8 @@ from cache import (
     save_skills,
 )
 from config import get_config_dir
-from marketplace import get_skills_dir
 from secrets_manager import retrieve_secret, store_secrets_batch
+from skills import get_skills_dir
 from ui import error, header, info, success, warning
 
 SCHEMA_VERSION = 1

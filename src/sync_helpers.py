@@ -8,8 +8,8 @@ from typing import Dict, List, Optional, Tuple
 from appliers import get_applier
 from cache import load_local_bundle, load_mcp_servers
 from extractors import detect_installed_tools
-from marketplace import get_skills_dir
 from secrets_manager import retrieve_secret
+from skills import get_skills_dir
 from ui import error, numbered_selection, success, warning
 
 
