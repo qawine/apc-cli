@@ -22,7 +22,7 @@ class TestMemoryViaLLM(unittest.TestCase):
         claude_dir = Path(tmpdir) / ".claude"
         claude_dir.mkdir()
         claude_md = claude_dir / "CLAUDE.md"
-        manifest = ToolManifest("claude", path=Path(tmpdir) / "manifest.json")
+        manifest = ToolManifest("claude-code", path=Path(tmpdir) / "manifest.json")
 
         collected = [
             {
@@ -60,7 +60,7 @@ class TestMemoryViaLLM(unittest.TestCase):
         from appliers.claude import ClaudeApplier
 
         tmpdir = tempfile.mkdtemp()
-        manifest = ToolManifest("claude", path=Path(tmpdir) / "manifest.json")
+        manifest = ToolManifest("claude-code", path=Path(tmpdir) / "manifest.json")
 
         collected = [{"id": "abc", "source_tool": "test", "content": "test"}]
 

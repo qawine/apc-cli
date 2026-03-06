@@ -23,7 +23,7 @@ class TestClaudeApplier(unittest.TestCase):
         self.manifest_path = Path(self.tmpdir) / "manifest.json"
 
     def _manifest(self) -> ToolManifest:
-        return ToolManifest("claude", path=self.manifest_path)
+        return ToolManifest("claude-code", path=self.manifest_path)
 
     def test_apply_skills(self):
         skills = [
@@ -248,7 +248,7 @@ class TestClaudeApplier(unittest.TestCase):
         manifest.save()
 
         # Second sync: only "fs" remains
-        manifest2 = ToolManifest("claude", path=self.manifest_path)
+        manifest2 = ToolManifest("claude-code", path=self.manifest_path)
         servers_v2 = [
             {
                 "name": "fs",

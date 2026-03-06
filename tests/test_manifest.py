@@ -11,16 +11,16 @@ from appliers.manifest import ToolManifest, _sha256
 class TestToolManifest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
-        self.manifest_path = Path(self.tmpdir) / "claude.json"
+        self.manifest_path = Path(self.tmpdir) / "claude-code.json"
 
     def _make_manifest(self) -> ToolManifest:
-        return ToolManifest("claude", path=self.manifest_path)
+        return ToolManifest("claude-code", path=self.manifest_path)
 
     # -- empty / first sync ---------------------------------------------------
 
     def test_empty_manifest_creation(self):
         m = self._make_manifest()
-        self.assertEqual(m.tool, "claude")
+        self.assertEqual(m.tool, "claude-code")
         self.assertEqual(m.managed_skill_names(), [])
         self.assertEqual(m.managed_linked_skill_names(), [])
         self.assertEqual(m.managed_mcp_names(), [])
@@ -112,7 +112,7 @@ class TestToolManifest(unittest.TestCase):
 
         self.assertTrue(self.manifest_path.exists())
 
-        m2 = ToolManifest("claude", path=self.manifest_path)
+        m2 = ToolManifest("claude-code", path=self.manifest_path)
         self.assertEqual(m2.managed_skill_names(), ["pdf"])
         self.assertEqual(m2.managed_mcp_names(), ["fs"])
         self.assertEqual(m2.memory_entry_ids(), ["e1"])
@@ -120,7 +120,7 @@ class TestToolManifest(unittest.TestCase):
 
     def test_reload_corrupt_json_creates_empty(self):
         self.manifest_path.write_text("NOT JSON", encoding="utf-8")
-        m = ToolManifest("claude", path=self.manifest_path)
+        m = ToolManifest("claude-code", path=self.manifest_path)
         self.assertEqual(m.managed_skill_names(), [])
         self.assertTrue(m.is_first_sync)
 
@@ -129,7 +129,7 @@ class TestToolManifest(unittest.TestCase):
             json.dumps({"schema_version": 999, "tool": "claude"}),
             encoding="utf-8",
         )
-        m = ToolManifest("claude", path=self.manifest_path)
+        m = ToolManifest("claude-code", path=self.manifest_path)
         self.assertEqual(m.managed_skill_names(), [])
 
     # -- is_first_sync --------------------------------------------------------
@@ -139,7 +139,7 @@ class TestToolManifest(unittest.TestCase):
         self.assertTrue(m.is_first_sync)
         m.save()
 
-        m2 = ToolManifest("claude", path=self.manifest_path)
+        m2 = ToolManifest("claude-code", path=self.manifest_path)
         self.assertFalse(m2.is_first_sync)
 
 

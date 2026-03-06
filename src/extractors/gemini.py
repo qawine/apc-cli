@@ -29,7 +29,7 @@ class GeminiExtractor(BaseExtractor):
                         "command": cfg.get("command"),
                         "args": cfg.get("args", []),
                         "env": cfg.get("env", {}),
-                        "source_tool": "gemini",
+                        "source_tool": "gemini-cli",
                         "targets": [],
                     }
                 )
