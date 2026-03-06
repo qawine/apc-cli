@@ -113,16 +113,11 @@ def _call_claude_cli(
     _strip_vars = {"CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT"}
     env = {k: v for k, v in os.environ.items() if k not in _strip_vars}
 
-    # Embed system instruction directly in the prompt for strongest effect
-    full_prompt = prompt
-    if system:
-        full_prompt = f"<instructions>{system}</instructions>\n\n{prompt}"
-
     # Write prompt to a temp file to avoid OS arg length limits
     import tempfile
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
-        f.write(full_prompt)
+        f.write(prompt)
         prompt_file = f.name
 
     cmd = [
