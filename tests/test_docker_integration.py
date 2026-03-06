@@ -676,7 +676,7 @@ class TestInstall:
         monkeypatch.setenv("HOME", str(tmp_path))
         result = runner.invoke(
             cli,
-            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-a", "cursor", "-y"],
+            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"],
         )
         assert result.exit_code == 0, result.output
         assert "✓" in result.output
@@ -696,7 +696,7 @@ class TestInstall:
                 "pdf",
                 "--skill",
                 "skill-creator",
-                "-a",
+                "-t",
                 "cursor",
                 "-y",
             ],
@@ -716,7 +716,7 @@ class TestInstall:
                 self.TEST_REPO,
                 "--skill",
                 "totally-nonexistent-xyz",
-                "-a",
+                "-t",
                 "cursor",
                 "-y",
             ],
@@ -730,7 +730,7 @@ class TestInstall:
     def test_install_all(self, runner, cli, tmp_path, monkeypatch):
         """--all installs every skill from the repo."""
         monkeypatch.setenv("HOME", str(tmp_path))
-        result = runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-a", "cursor", "-y"])
+        result = runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-t", "cursor", "-y"])
         assert result.exit_code == 0, result.output
         assert "✓" in result.output
         skills_dir = tmp_path / ".apc" / "skills"
@@ -742,7 +742,7 @@ class TestInstall:
         monkeypatch.setenv("HOME", str(tmp_path))
         result = runner.invoke(
             cli,
-            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-a", "cursor", "-y"],
+            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"],
         )
         assert result.exit_code == 0
         assert "Proceed?" not in result.output
@@ -751,12 +751,12 @@ class TestInstall:
         assert len(skill_md.read_text()) > 0
 
     def test_install_target_all_agents(self, runner, cli, tmp_path, monkeypatch):
-        """--agent '*' installs to all detected tools."""
+        """--target '*' installs to all detected tools."""
         monkeypatch.setenv("HOME", str(tmp_path))
         (tmp_path / ".cursor").mkdir()
         result = runner.invoke(
             cli,
-            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "--agent", "*", "-y"],
+            ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "--target", "*", "-y"],
         )
         assert result.exit_code == 0, result.output
         assert "✓" in result.output
@@ -786,7 +786,7 @@ class TestInstallThenSync:
         (tmp_path / ".cursor" / "mcp.json").write_text("{}")
 
         r1 = runner.invoke(
-            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-a", "cursor", "-y"]
+            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"]
         )
         assert r1.exit_code == 0, r1.output
 
@@ -801,7 +801,7 @@ class TestInstallThenSync:
         monkeypatch.setenv("HOME", str(tmp_path))
 
         runner.invoke(
-            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-a", "cursor", "-y"]
+            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"]
         )
 
         result = runner.invoke(cli, ["skill", "list"])
@@ -827,7 +827,7 @@ class TestInstallThenSync:
                 skills[0],
                 "--skill",
                 skills[1],
-                "-a",
+                "-t",
                 "cursor",
                 "-y",
             ],
@@ -850,7 +850,7 @@ class TestInstallThenSync:
         (tmp_path / ".cursor").mkdir()
         (tmp_path / ".cursor" / "mcp.json").write_text("{}")
 
-        runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-a", "cursor", "-y"])
+        runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-t", "cursor", "-y"])
 
         installed_count = len(list((tmp_path / ".apc" / "skills").iterdir()))
         assert installed_count > 5
@@ -866,7 +866,7 @@ class TestInstallThenSync:
         (tmp_path / ".cursor" / "mcp.json").write_text("{}")
 
         runner.invoke(
-            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-a", "cursor", "-y"]
+            cli, ["install", self.TEST_REPO, "--skill", self.KNOWN_SKILL, "-t", "cursor", "-y"]
         )
         runner.invoke(cli, ["sync", "--tools", "cursor", "--yes"])
 
