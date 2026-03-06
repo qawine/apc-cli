@@ -45,7 +45,7 @@ class ClaudeExtractor(BaseExtractor):
                         "tags": metadata.get("tags", []),
                         "targets": [],
                         "version": metadata.get("version", "1.0.0"),
-                        "source_tool": "claude",
+                        "source_tool": "claude-code",
                         "source_path": str(md_file),
                         "checksum": checksum,
                     }
@@ -70,7 +70,7 @@ class ClaudeExtractor(BaseExtractor):
                         "command": cfg.get("command"),
                         "args": cfg.get("args", []),
                         "env": cfg.get("env", {}),
-                        "source_tool": "claude",
+                        "source_tool": "claude-code",
                         "targets": [],
                     }
                 )
@@ -92,8 +92,8 @@ class ClaudeExtractor(BaseExtractor):
                     continue
                 entries.append(
                     {
-                        "id": _content_hash_id("claude", path.name, content),
-                        "source_tool": "claude",
+                        "id": _content_hash_id("claude-code", path.name, content),
+                        "source_tool": "claude-code",
                         "source_file": path.name,
                         "source_path": str(path),
                         "label": mf["label"],

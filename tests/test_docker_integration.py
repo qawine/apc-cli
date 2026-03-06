@@ -276,14 +276,14 @@ class TestCollect:
         runner.invoke(cli, ["collect", "--yes"])
         data = json.loads((HOME / ".apc" / "cache" / "mcp_servers.json").read_text())
         sources = {s.get("source_tool") for s in data}
-        expected = {"claude", "cursor", "gemini", "copilot", "windsurf"}
+        expected = {"claude-code", "cursor", "gemini-cli", "github-copilot", "windsurf"}
         assert expected.issubset(sources), f"Missing sources: {expected - sources}"
 
     def test_memory_has_claude_entry(self, runner, cli):
         runner.invoke(cli, ["collect", "--yes"])
         data = json.loads((HOME / ".apc" / "cache" / "memory.json").read_text())
         sources = {e.get("source_tool") for e in data}
-        assert "claude" in sources
+        assert "claude-code" in sources
 
     def test_memory_has_openclaw_entry(self, runner, cli):
         runner.invoke(cli, ["collect", "--yes"])

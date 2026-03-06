@@ -92,7 +92,7 @@ Do something useful.
         entry = entries[0]
         # New format fields
         self.assertIn("id", entry)
-        self.assertEqual(entry["source_tool"], "claude")
+        self.assertEqual(entry["source_tool"], "claude-code")
         self.assertEqual(entry["source_file"], "CLAUDE.md")
         self.assertIn("content", entry)
         self.assertIn("TypeScript", entry["content"])

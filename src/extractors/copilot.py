@@ -28,7 +28,7 @@ class CopilotExtractor(BaseExtractor):
                     "tags": ["copilot", "instructions"],
                     "targets": [],
                     "version": "1.0.0",
-                    "source_tool": "copilot",
+                    "source_tool": "github-copilot",
                     "source_path": str(COPILOT_INSTRUCTIONS),
                     "checksum": checksum,
                 }
@@ -53,7 +53,7 @@ class CopilotExtractor(BaseExtractor):
                         "command": cfg.get("command"),
                         "args": cfg.get("args", []),
                         "env": cfg.get("env", {}),
-                        "source_tool": "copilot",
+                        "source_tool": "github-copilot",
                         "targets": [],
                     }
                 )

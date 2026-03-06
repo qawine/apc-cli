@@ -64,7 +64,7 @@ organized sections. Preserve any existing "## Gemini Added Memories" content.
 
 
 class GeminiApplier(BaseApplier):
-    TOOL_NAME = "gemini"
+    TOOL_NAME = "gemini-cli"
     MEMORY_SCHEMA = GEMINI_MEMORY_SCHEMA
 
     def apply_skills(self, skills: List[Dict], manifest: ToolManifest) -> int:

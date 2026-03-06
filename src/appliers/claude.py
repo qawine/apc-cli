@@ -26,7 +26,7 @@ Do NOT include personal information like name/timezone — Claude Code is a codi
 
 class ClaudeApplier(BaseApplier):
     SKILL_DIR = CLAUDE_SKILLS_DIR
-    TOOL_NAME = "claude"
+    TOOL_NAME = "claude-code"
     MEMORY_SCHEMA = CLAUDE_MEMORY_SCHEMA
 
     def apply_skills(self, skills: List[Dict], manifest: ToolManifest) -> int:

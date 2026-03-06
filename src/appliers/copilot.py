@@ -69,7 +69,7 @@ language or path-specific rules.
 
 
 class CopilotApplier(BaseApplier):
-    TOOL_NAME = "copilot"
+    TOOL_NAME = "github-copilot"
     MEMORY_SCHEMA = COPILOT_MEMORY_SCHEMA
 
     def apply_skills(self, skills: List[Dict], manifest: ToolManifest) -> int:
