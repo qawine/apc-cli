@@ -167,8 +167,11 @@ def sync_memory(tool_list: List[str]) -> int:
     return total
 
 
-def sync_all(tool_list: List[str], no_memory: bool = False, override_mcp: bool = False) -> None:
-    """Apply everything (skills + MCP + memory). Used by `apc sync`."""
+def sync_all(tool_list: List[str], no_memory: bool = False, override_mcp: bool = False) -> bool:
+    """Apply everything (skills + MCP + memory). Used by `apc sync`.
+
+    Returns True if at least one tool was synced successfully, False otherwise.
+    """
     bundle = load_local_bundle()
     collected_skills = bundle["skills"]
     mcp_servers = bundle["mcp_servers"]
@@ -187,6 +190,7 @@ def sync_all(tool_list: List[str], no_memory: bool = False, override_mcp: bool =
     total_skills = 0
     total_mcp = 0
     total_memory = 0
+    failed_tools = []
 
     for tool_name in tool_list:
         try:
@@ -219,7 +223,14 @@ def sync_all(tool_list: List[str], no_memory: bool = False, override_mcp: bool =
             success(f"{tool_name}: {s + lk} skills, {m} MCP servers, {mem} memory files")
         except Exception as e:
             error(f"Failed to apply to {tool_name}: {e}")
+            failed_tools.append(tool_name)
 
-    success(
-        f"\nSynced: {total_skills} skills, {total_mcp} MCP servers, {total_memory} memory files"
-    )
+    any_success = len(failed_tools) < len(tool_list)
+    if any_success:
+        success(
+            f"\nSynced: {total_skills} skills, {total_mcp} MCP servers, {total_memory} memory files"
+        )
+    elif failed_tools:
+        warning(f"\nSync failed for all tools: {', '.join(failed_tools)}")
+
+    return any_success
