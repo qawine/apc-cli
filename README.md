@@ -40,7 +40,7 @@ $ apc status
 
 - **Multi-tool sync** — extract and apply skills, MCP servers, and memory across 6 supported AI tools
 - **MCP server management** — sync Model Context Protocol server configs between tools with secret redaction and OS keychain storage
-- **Skill marketplace** — install reusable instruction snippets from GitHub repositories or local directories
+- **Skill installation** — install reusable instruction snippets directly from GitHub repositories
 - **LLM-powered memory sync** — transform and merge memory entries across tools using any configured LLM provider
 - **Offline-first** — no cloud account or login required; everything runs locally
 - **Smart conflict resolution** — detects overlapping configs from multiple tools and lets you choose
@@ -81,8 +81,8 @@ apc sync
 # 4. Or sync to specific tools only
 apc sync --tools cursor,gemini
 
-# 5. Install a skill from a marketplace
-apc install my-skill --repo owner/repo
+# 5. Install skills from a GitHub repo
+apc install owner/repo --skill my-skill
 
 # 6. Add a memory entry manually
 apc memory add "Always use TypeScript strict mode"
@@ -101,14 +101,23 @@ apc configure
 | `apc status` | Show detected tools and local cache summary |
 | `apc sync` | Sync all cached configs to target tools |
 
-**Options for `collect` and `sync`:**
+**Options for `collect`:**
+
+| Flag | Description |
+|------|-------------|
+| `--tools <list>` | Comma-separated tool list (e.g., `claude-code,cursor`) |
+| `--no-memory` | Skip collecting memory entries |
+| `--yes`, `-y` | Skip confirmation prompts |
+
+**Options for `sync`:**
 
 | Flag | Description |
 |------|-------------|
 | `--tools <list>` | Comma-separated tool list (e.g., `cursor,gemini`) |
 | `--all` | Apply to all detected tools without prompting |
 | `--no-memory` | Skip memory entries |
-| `--dry-run` | Show what would be applied (sync only) |
+| `--override-mcp` | Replace existing MCP servers instead of merging |
+| `--dry-run` | Show what would be applied without writing |
 | `--yes`, `-y` | Skip confirmation prompts |
 
 ### Skills
@@ -118,7 +127,25 @@ apc configure
 | `apc skill list` | List all skills in the cache |
 | `apc skill show [name]` | View full skill details with pagination |
 | `apc skill sync` | Sync skills to target tools |
-| `apc install <name>` | Install a skill from a marketplace |
+
+### Install
+
+| Command | Description |
+|---------|-------------|
+| `apc install <repo>` | Install skills from a GitHub repository |
+| `apc install <repo> --list` | List available skills in the repo |
+| `apc install <repo> --skill <name>` | Install a specific skill |
+| `apc install <repo> --all` | Install all skills from the repo |
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--skill`, `-s` | Skill name(s) to install (repeatable, or `'*'` for all) |
+| `--target`, `-t` | Target tool(s) to install to (repeatable, or `'*'` for all detected) |
+| `--branch` | Git branch to fetch from (default: `main`) |
+| `--list` | List available skills without installing |
+| `--yes`, `-y` | Skip confirmation prompts |
 
 ### Memory
 
@@ -136,14 +163,6 @@ apc configure
 | `apc mcp list` | List cached MCP server configs |
 | `apc mcp sync` | Sync MCP servers to target tools |
 | `apc mcp remove <name>` | Remove an MCP server from the cache |
-
-### Marketplace
-
-| Command | Description |
-|---------|-------------|
-| `apc marketplace list` | Show configured skill sources |
-| `apc marketplace add <source>` | Add a GitHub repo or local directory |
-| `apc marketplace delete <source>` | Remove a marketplace source |
 
 ### Export / Import
 
@@ -205,9 +224,9 @@ apc configure
 │   └── <skill-name>/
 │       └── SKILL.md
 ├── manifests/               # Per-tool sync tracking
-├── marketplaces.json        # Configured skill sources
 ├── auth-profiles.json       # LLM API credentials
-└── models.json              # Model preferences
+├── models.json              # Model preferences
+└── age-identity.txt         # Age private key (export/import encryption)
 ```
 
 ## Configuration
