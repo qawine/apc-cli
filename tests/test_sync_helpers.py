@@ -76,6 +76,7 @@ class TestSyncAll(unittest.TestCase):
 
     def _run_sync_all(self, tool_list, applier_factory, **kwargs):
         """Helper: patch get_applier + load_local_bundle + skills helpers."""
+
         def get_applier_side_effect(name):
             return applier_factory(self.tmpdir, name)
 
@@ -87,6 +88,7 @@ class TestSyncAll(unittest.TestCase):
             patch("sync_helpers.get_skills_dir", return_value=self.tmpdir / "skills"),
         ):
             from sync_helpers import sync_all
+
             return sync_all(tool_list, **kwargs)
 
     def test_happy_path_returns_true(self):
@@ -138,6 +140,7 @@ class TestSyncAll(unittest.TestCase):
 
     def test_all_fail_returns_false(self):
         """Every tool errors → any_success = False."""
+
         def factory(tmpdir, name):
             bad = MagicMock()
             bad.get_manifest.side_effect = RuntimeError("everything broken")
@@ -169,12 +172,16 @@ class TestSyncSkillsPerToolCounter(unittest.TestCase):
 
         with (
             patch("sync_helpers.get_applier", side_effect=lambda n: factory(tmpdir, n)),
-            patch("sync_helpers.load_local_bundle", return_value={"skills": skills, "mcp_servers": [], "memory": []}),
+            patch(
+                "sync_helpers.load_local_bundle",
+                return_value={"skills": skills, "mcp_servers": [], "memory": []},
+            ),
             patch("sync_helpers._discover_installed_skills", return_value=[]),
             patch("sync_helpers.get_skills_dir", return_value=tmpdir / "skills"),
             patch("sync_helpers.success", side_effect=lambda msg: success_messages.append(msg)),
         ):
             from sync_helpers import sync_skills
+
             sync_skills(["cursor", "claude-code"])
 
         # Each message should say 3 copied, not 3 then 6
