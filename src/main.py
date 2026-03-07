@@ -21,7 +21,7 @@ from ui import (
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="apc")
+@click.version_option(version="0.1.1", prog_name="apc")
 def cli():
     """apc — AI Personal Context manager.
 
