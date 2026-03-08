@@ -1090,10 +1090,16 @@ class TestInstallThenSync:
         (tmp_path / ".cursor").mkdir()
         (tmp_path / ".cursor" / "mcp.json").write_text("{}")
 
-        runner.invoke(cli, ["install", self.TEST_REPO, "--all", "-t", "cursor", "-y"])
+        r_install = runner.invoke(
+            cli, ["install", self.TEST_REPO, "--all", "-t", "cursor", "-y"]
+        )
+        assert r_install.exit_code == 0, r_install.output
 
-        installed_count = len(list((tmp_path / ".apc" / "skills").iterdir()))
-        assert installed_count > 5
+        skills_dir = tmp_path / ".apc" / "skills"
+        installed_count = len(list(skills_dir.iterdir())) if skills_dir.exists() else 0
+        assert installed_count > 5, (
+            f"Expected >5 skills installed, got {installed_count}. Install output:\n{r_install.output}"
+        )
 
         r_sync = runner.invoke(cli, ["sync", "--tools", "cursor", "--dry-run"])
         assert r_sync.exit_code == 0
