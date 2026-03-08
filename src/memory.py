@@ -39,15 +39,20 @@ def memory():
 )
 def add(text, category):
     """Add a memory entry to local cache. Usage: apc memory add "your text" """
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    short_hash = hashlib.md5(text.encode()).hexdigest()[:6]
-    entry_id = f"{ts}_{short_hash}"
+    # Use the new schema (id + source_tool) so that:
+    # 1. The same text added twice is idempotent — content-hash id is stable (#45)
+    # 2. merge_memory deduplicates via 'id', not a timestamp-based entry_id
+    content_id = hashlib.sha256(f"manual:{category}:{text}".encode()).hexdigest()[:16]
+    now = datetime.now(timezone.utc).isoformat()
 
     new_entry = {
-        "entry_id": entry_id,
+        "id": content_id,
+        "source_tool": "manual",
+        "source_file": "memory_add",
+        "label": f"Manual [{category}]",
         "category": category,
         "content": text,
-        "source": "manual_add",
+        "collected_at": now,
     }
 
     existing = load_memory()
