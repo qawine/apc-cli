@@ -10,7 +10,13 @@ import click
 from appliers import get_applier
 from cache import load_skills, merge_skills, save_skills
 from extractors import detect_installed_tools
-from skills import fetch_skill_from_repo, list_skills_in_repo, sanitize_skill_name, save_skill_file
+from skills import (
+    fetch_skill_from_repo,
+    get_skills_dir,
+    list_skills_in_repo,
+    sanitize_skill_name,
+    save_skill_file,
+)
 
 _AGENTS = ["claude-code", "cursor", "gemini-cli", "github-copilot", "openclaw", "windsurf"]
 
@@ -166,6 +172,11 @@ def install(repo, skills, install_all, targets, branch, list_only, yes):
         if not click.confirm("\nProceed?", default=True):
             click.echo("Cancelled.")
             return
+
+    # Ensure ~/.apc/skills/ exists before any skill is fetched.
+    # This guarantees the directory is present even if all fetches fail,
+    # so callers can safely call iterdir() or exist() on it after install.
+    get_skills_dir()
 
     # Fetch and install
     installed_skills = []
