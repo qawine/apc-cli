@@ -148,6 +148,12 @@ def install(repo, skills, install_all, targets, branch, list_only, yes):
         available = list_skills_in_repo(repo, branch)
         if not available:
             click.echo(f"No skills found in {repo} (branch: {branch}).", err=True)
+            click.echo("\nSkills must be organized as: skills/<name>/SKILL.md", err=True)
+            click.echo("Each SKILL.md should have YAML frontmatter:", err=True)
+            click.echo("  ---", err=True)
+            click.echo("  name: skill-name", err=True)
+            click.echo("  description: What this skill does", err=True)
+            click.echo("  ---", err=True)
             return
         click.echo(f"\nAvailable skills in {repo}:\n")
         for name in available:
